@@ -1,17 +1,18 @@
-import { LeaveRequest } from '../../hooks/useLeaves';
-import { Calendar, Clock, FileText } from 'lucide-react';
+import { Check, X, Info } from 'lucide-react';
+import { LeaveRequest } from '../../types';
 
 interface LeaveRequestListProps {
   leaves: LeaveRequest[];
-  selectedLeave: LeaveRequest | null;
-  onSelectLeave: (leave: LeaveRequest) => void;
+  onApprove: (id: string) => void;
+  onReject: (id: string) => void;
+  onRequestInfo: (leave: LeaveRequest) => void;
 }
 
-const LeaveRequestList = ({ leaves, selectedLeave, onSelectLeave }: LeaveRequestListProps) => {
+const LeaveRequestList = ({ leaves, onApprove, onReject, onRequestInfo }: LeaveRequestListProps) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Pending':
-        return 'bg-orange-100 text-orange-800';
+        return 'bg-yellow-100 text-yellow-800';
       case 'Approved':
         return 'bg-green-100 text-green-800';
       case 'Rejected':
@@ -21,96 +22,96 @@ const LeaveRequestList = ({ leaves, selectedLeave, onSelectLeave }: LeaveRequest
     }
   };
 
-  const getLeaveTypeColor = (type: string) => {
-    switch (type) {
-      case 'Annual':
-        return 'bg-blue-100 text-blue-800';
-      case 'Sick':
-        return 'bg-red-100 text-red-800';
-      case 'Personal':
-        return 'bg-cyan-100 text-cyan-800';
-      case 'Maternity':
-        return 'bg-pink-100 text-pink-800';
-      case 'Unpaid':
-        return 'bg-gray-100 text-gray-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-      <div className="p-6 border-b border-gray-100">
-        <h2 className="text-lg font-semibold text-gray-900">Leave Requests</h2>
-      </div>
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <table className="min-w-full divide-y divide-gray-100">
+        <thead className="bg-gray-50">
+          <tr>
+            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Employee</th>
+            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Leave Type</th>
+            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Duration</th>
+            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
+            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Applied On</th>
+            <th className="px-6 py-3 text-center text-xs font-semibold text-gray-600 uppercase">Actions</th>
+          </tr>
+        </thead>
 
-      <div className="divide-y divide-gray-100 max-h-[800px] overflow-y-auto">
-        {leaves.length === 0 ? (
-          <div className="p-12 text-center">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FileText className="w-8 h-8 text-gray-400" />
-            </div>
-            <p className="text-gray-500">No leave requests found</p>
-          </div>
-        ) : (
-          leaves.map((leave) => (
-            <div
-              key={leave.id}
-              onClick={() => onSelectLeave(leave)}
-              className={`p-6 cursor-pointer transition-all hover:bg-gray-50 ${
-                selectedLeave?.id === leave.id ? 'bg-blue-50 border-l-4 border-blue-500' : ''
-              }`}
-            >
-              <div className="flex items-start gap-4">
-                <img
-                  src={leave.employeeAvatar}
-                  alt={leave.employeeName}
-                  className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm"
-                />
-
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <div>
-                      <h3 className="font-semibold text-gray-900">{leave.employeeName}</h3>
-                      <p className="text-sm text-gray-600">{leave.department}</p>
-                    </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getStatusColor(leave.status)}`}>
-                      {leave.status}
-                    </span>
+        <tbody className="divide-y divide-gray-100">
+          {leaves.length === 0 ? (
+            <tr>
+              <td colSpan={6} className="text-center py-10 text-gray-500">
+                No leave requests found
+              </td>
+            </tr>
+          ) : (
+            leaves.map((leave) => (
+              <tr key={leave.id} className="hover:bg-gray-50 transition-all">
+                <td className="px-6 py-4 flex items-center gap-3">
+                  <img
+                    src={leave.employeeAvatar}
+                    alt={leave.employeeName}
+                    className="w-10 h-10 rounded-full object-cover border"
+                  />
+                  <div>
+                    <div className="font-semibold text-gray-900">{leave.employeeName}</div>
+                    <div className="text-sm text-gray-500">{leave.department}</div>
                   </div>
+                </td>
 
-                  <div className="flex flex-wrap items-center gap-3 mb-3">
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${getLeaveTypeColor(leave.leaveType)}`}>
-                      {leave.leaveType} Leave
-                    </span>
-                    <div className="flex items-center gap-1 text-xs text-gray-600">
-                      <Calendar className="w-3 h-3" />
-                      <span>
-                        {new Date(leave.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                        {' - '}
-                        {new Date(leave.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1 text-xs text-gray-600">
-                      <Clock className="w-3 h-3" />
-                      <span>{leave.duration} {leave.duration === 1 ? 'day' : 'days'}</span>
-                    </div>
+                <td className="px-6 py-4 text-sm text-gray-700">{leave.leaveType} Leave</td>
+                <td className="px-6 py-4 text-sm text-gray-700">
+                  <div className="font-medium">{leave.duration} days</div>
+                  <div className="text-xs text-gray-500">
+                    {new Date(leave.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} -{' '}
+                    {new Date(leave.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </div>
-
-                  <p className="text-sm text-gray-600 line-clamp-2">{leave.reason}</p>
-
-                  <div className="mt-2 text-xs text-gray-500">
-                    Applied on {new Date(leave.appliedDate).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric'
-                    })}
+                </td>
+                <td className="px-6 py-4">
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(leave.status)}`}>
+                    {leave.status}
+                  </span>
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-600">
+                  {new Date(leave.appliedDate).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                  })}
+                </td>
+                <td className="px-6 py-4 text-center">
+                  <div className="flex justify-center gap-3">
+                    {leave.status === 'Pending' && (
+                      <>
+                        <button
+                          onClick={() => onApprove(leave.id)}
+                          className="p-2 rounded-full bg-green-100 hover:bg-green-200 text-green-600 transition"
+                        >
+                          <Check className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => onReject(leave.id)}
+                          className="p-2 rounded-full bg-red-100 hover:bg-red-200 text-red-600 transition"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </>
+                    )}
+                    <button
+                      onClick={() => onRequestInfo(leave)}
+                      className="p-2 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-600 transition"
+                    >
+                      <Info className="w-4 h-4" />
+                    </button>
                   </div>
-                </div>
-              </div>
-            </div>
-          ))
-        )}
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+
+      <div className="p-4 text-sm text-gray-500 border-t border-gray-100">
+        Showing {leaves.length} {leaves.length === 1 ? 'result' : 'results'}
       </div>
     </div>
   );

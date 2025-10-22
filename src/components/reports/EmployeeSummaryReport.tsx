@@ -1,142 +1,258 @@
-import { useEmployees } from '../../hooks/useEmployees';
-import { Briefcase, DollarSign, Calendar, User } from 'lucide-react';
+import { useState } from "react";
+import { useEmployees } from "../../hooks/useEmployees";
+import { Users, Calendar, Briefcase, TrendingUp } from "lucide-react";
+import {
+  Chart as ChartJS,
+  BarElement,
+  CategoryScale,
+  LinearScale,
+  Legend,
+  Tooltip,
+} from "chart.js";
+import { Bar } from "react-chartjs-2";
+import StatsCards from "../Reusable/StatsCard";
+import { GrDocumentText } from "react-icons/gr";
+import { HiOutlineDocumentChartBar } from "react-icons/hi2";
+import { PiPrinterLight } from "react-icons/pi";
+import EmployeeReportPDF from "../PDFs/EmployeeSummeryReportPDF";
+import { Employee } from "../../types";
+import { pdf } from "@react-pdf/renderer";
+import { dummyEmployees } from "../../data/dummy.data";
+import { generateEmployeeCSV } from "../CSVs/EmployeeSummeryCSV";
+
+ChartJS.register(BarElement, CategoryScale, LinearScale, Legend, Tooltip);
 
 const EmployeeSummaryReport = () => {
   const { employees } = useEmployees();
 
-  const totalSalary = employees.reduce((sum, emp) => sum + emp.salary, 0);
-  const avgSalary = totalSalary / employees.length;
-  const activeCount = employees.filter(emp => emp.status === 'Active').length;
-  const onLeaveCount = employees.filter(emp => emp.status === 'On Leave').length;
-  const inactiveCount = employees.filter(emp => emp.status === 'Inactive').length;
+  const [selectedDepartment, setSelectedDepartment] =
+    useState("All Departments");
+  const [startDate, setStartDate] = useState("2024-01-01");
+  const [endDate, setEndDate] = useState("2024-12-31");
+
+  const departments = Array.from(
+    new Set(employees.map((emp) => emp.department))
+  );
+
+  const filteredEmployees =
+    selectedDepartment === "All Departments"
+      ? employees
+      : employees.filter((e) => e.department === selectedDepartment);
+
+  const totalEmployees = filteredEmployees.length;
+  const activeEmployees = filteredEmployees.filter(
+    (e) => e.status === "Active"
+  ).length;
+  const newHires = filteredEmployees.filter(
+    (e) => new Date(e.joinDate) >= new Date(startDate)
+  ).length;
+  const departmentCount = departments.length;
+
+  // --- Department summary (male/female count)
+  const departmentSummary = departments.map((dep) => {
+    const deptEmployees = employees.filter((e) => e.department === dep);
+    const male = deptEmployees.filter((e) => e.gender === "Male").length;
+    const female = deptEmployees.filter((e) => e.gender === "Female").length;
+    return {
+      department: dep,
+      male,
+      female,
+      total: male + female,
+    };
+  });
+
+  // --- Chart data (stacked)
+  const chartData = {
+    labels: departmentSummary.map((d) => d.department),
+    datasets: [
+      {
+        label: "Male",
+        data: departmentSummary.map((d) => d.male),
+        backgroundColor: "#4ade80",
+        borderRadius: 6,
+      },
+      {
+        label: "Female",
+        data: departmentSummary.map((d) => d.female),
+        backgroundColor: "#86efac",
+        borderRadius: 6,
+      },
+    ],
+  };
+
+  const chartOptions = {
+    responsive: true,
+    plugins: {
+      legend: { position: "bottom" as const },
+    },
+    scales: {
+      x: { stacked: true, grid: { display: false } },
+      y: { stacked: true, grid: { color: "#f3f4f6" } },
+    },
+  };
+
+  const statsData = [
+    {
+      title: "Total Employees",
+      value: totalEmployees,
+      subtitle: "+2 this month",
+      icon: <Users className="w-7 h-7 text-blue-600" />,
+      iconBg: "bg-blue-50",
+      iconColor: "text-blue-600",
+    },
+    {
+      title: "Active Employees",
+      value: activeEmployees,
+      subtitle: `${((activeEmployees / employees.length) * 100).toFixed(
+        0
+      )}% of total`,
+      icon: <Briefcase className="w-7 h-7 text-green-600" />,
+      iconBg: "bg-green-50",
+      iconColor: "text-green-600",
+    },
+    {
+      title: "New Hires",
+      value: newHires,
+      subtitle: "Currently away",
+      icon: <Calendar className="w-7 h-7 text-orange-600" />,
+      iconBg: "bg-orange-50",
+      iconColor: "text-orange-600",
+    },
+    {
+      title: "Departments",
+      value: departmentCount,
+      subtitle: "Last 22 days",
+      icon: <TrendingUp className="w-7 h-7 text-cyan-600" />,
+      iconBg: "bg-cyan-50",
+      iconColor: "text-cyan-600",
+    },
+  ];
+
+  const downloadEmployeeSummeryReport = async (employees: Employee[]) => {
+    const blob = await pdf(
+      <EmployeeReportPDF employees={employees} />
+    ).toBlob();
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `Employee-summery-report.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
-              <User className="w-6 h-6 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Total Employees</p>
-              <p className="text-2xl font-bold text-gray-900">{employees.length}</p>
-            </div>
+    <div className="space-y-8">
+      {/* Filters */}
+      <div className="flex flex-wrap items-center justify-between gap-4 bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+        <div className="flex items-center gap-4">
+          <select
+            value={selectedDepartment}
+            onChange={(e) => setSelectedDepartment(e.target.value)}
+            className="bg-white border border-gray-200 rounded-lg py-2.5 px-4 text-sm text-gray-700 focus:ring-2 focus:ring-blue-500"
+          >
+            <option>All Departments</option>
+            {departments.map((dep) => (
+              <option key={dep}>{dep}</option>
+            ))}
+          </select>
+
+          <div className="flex items-center gap-2">
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="border border-gray-200 rounded-lg py-2.5 px-3 text-sm text-gray-700 focus:ring-2 focus:ring-blue-500"
+            />
+            <span className="text-gray-400">to</span>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="border border-gray-200 rounded-lg py-2.5 px-3 text-sm text-gray-700 focus:ring-2 focus:ring-blue-500"
+            />
           </div>
         </div>
-
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center">
-              <Briefcase className="w-6 h-6 text-green-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Active</p>
-              <p className="text-2xl font-bold text-gray-900">{activeCount}</p>
-            </div>
+        <div className="flex items-center gap-8 pr-8">
+          <div
+            className="flex items-center gap-2 cursor-pointer"
+            onClick={() => downloadEmployeeSummeryReport(dummyEmployees)}
+          >
+            <GrDocumentText size={14} color="red" />
+            <p className="text-xs text-red-600 font-semibold">PDF</p>
           </div>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 bg-orange-50 rounded-lg flex items-center justify-center">
-              <Calendar className="w-6 h-6 text-orange-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">On Leave</p>
-              <p className="text-2xl font-bold text-gray-900">{onLeaveCount}</p>
-            </div>
+          <div
+            className="flex items-center gap-2 cursor-pointer"
+            onClick={() => generateEmployeeCSV(dummyEmployees)}
+          >
+            <HiOutlineDocumentChartBar size={16} color="green" />
+            <p className="text-xs text-green-600 font-semibold">CSV</p>
           </div>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 bg-red-50 rounded-lg flex items-center justify-center">
-              <DollarSign className="w-6 h-6 text-red-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Inactive</p>
-              <p className="text-2xl font-bold text-gray-900">{inactiveCount}</p>
-            </div>
+          <div className="flex items-center gap-2 cursor-pointer">
+            <PiPrinterLight size={20} color="blue" />
+            <p className="text-xs text-blue-600 font-semibold">Print</p>
           </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="p-6 border-b border-gray-100">
-          <h2 className="text-lg font-semibold text-gray-900">Detailed Employee Summary</h2>
+      {/* Summary Cards */}
+      <StatsCards data={statsData} />
+
+      {/* Department Chart + Summary Table */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Chart */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Department-wise Employee Distribution
+          </h3>
+          <Bar data={chartData} options={chartOptions} height={200} />
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-100">
-              <tr>
-                <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700">Employee ID</th>
-                <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700">Name</th>
-                <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700">Role</th>
-                <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700">Department</th>
-                <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700">Status</th>
-                <th className="text-left py-4 px-6 text-sm font-semibold text-gray-700">Join Date</th>
-                <th className="text-right py-4 px-6 text-sm font-semibold text-gray-700">Salary</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {employees.map((employee) => (
-                <tr key={employee.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="py-4 px-6 text-sm font-medium text-gray-900">{employee.id}</td>
-                  <td className="py-4 px-6">
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={employee.avatar}
-                        alt={employee.name}
-                        className="w-8 h-8 rounded-full object-cover"
-                      />
-                      <span className="text-sm font-medium text-gray-900">{employee.name}</span>
-                    </div>
-                  </td>
-                  <td className="py-4 px-6 text-sm text-gray-600">{employee.role}</td>
-                  <td className="py-4 px-6 text-sm text-gray-600">{employee.department}</td>
-                  <td className="py-4 px-6">
-                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
-                      employee.status === 'Active' ? 'bg-green-100 text-green-800' :
-                      employee.status === 'On Leave' ? 'bg-orange-100 text-orange-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {employee.status}
-                    </span>
-                  </td>
-                  <td className="py-4 px-6 text-sm text-gray-600">
-                    {new Date(employee.joinDate).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric'
-                    })}
-                  </td>
-                  <td className="py-4 px-6 text-sm font-medium text-gray-900 text-right">
-                    ${employee.salary.toLocaleString()}
-                  </td>
+        {/* Table */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Employee Summary by Department
+          </h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 border-b border-gray-100">
+                <tr>
+                  <th className="py-3 px-4 text-left font-semibold text-gray-700">
+                    Department
+                  </th>
+                  <th className="py-3 px-4 text-center font-semibold text-gray-700">
+                    Male
+                  </th>
+                  <th className="py-3 px-4 text-center font-semibold text-gray-700">
+                    Female
+                  </th>
+                  <th className="py-3 px-4 text-right font-semibold text-gray-700">
+                    Total
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-            <tfoot className="bg-gray-50 border-t border-gray-100">
-              <tr>
-                <td colSpan={6} className="py-4 px-6 text-sm font-semibold text-gray-700 text-right">
-                  Total Payroll
-                </td>
-                <td className="py-4 px-6 text-sm font-bold text-gray-900 text-right">
-                  ${totalSalary.toLocaleString()}
-                </td>
-              </tr>
-              <tr>
-                <td colSpan={6} className="py-4 px-6 text-sm font-semibold text-gray-700 text-right">
-                  Average Salary
-                </td>
-                <td className="py-4 px-6 text-sm font-bold text-gray-900 text-right">
-                  ${Math.round(avgSalary).toLocaleString()}
-                </td>
-              </tr>
-            </tfoot>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {departmentSummary.map((dept) => (
+                  <tr key={dept.department}>
+                    <td className="py-3 px-4 text-gray-900 font-medium">
+                      {dept.department}
+                    </td>
+                    <td className="py-3 px-4 text-center text-gray-600">
+                      {dept.male}
+                    </td>
+                    <td className="py-3 px-4 text-center text-gray-600">
+                      {dept.female}
+                    </td>
+                    <td className="py-3 px-4 text-right font-semibold text-gray-900">
+                      {dept.total}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

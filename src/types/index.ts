@@ -14,6 +14,7 @@ export interface Employee {
   email: string;
   phone: string;
   role: string;
+  gender: string;
   department: string;
   status: "Active" | "Inactive" | "On Leave";
   joinDate: string;
