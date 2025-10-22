@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useEmployees } from "../../hooks/useEmployees";
-import { Users, Calendar, Briefcase, TrendingUp } from "lucide-react";
+import { Users } from "lucide-react";
 import {
   Chart as ChartJS,
   BarElement,
@@ -19,6 +19,9 @@ import { Employee } from "../../types";
 import { pdf } from "@react-pdf/renderer";
 import { dummyEmployees } from "../../data/dummy.data";
 import { generateEmployeeCSV } from "../CSVs/EmployeeSummeryCSV";
+import { BsPersonPlus } from "react-icons/bs";
+import { LuBuilding2 } from "react-icons/lu";
+import { BsPerson } from "react-icons/bs";
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, Legend, Tooltip);
 
@@ -69,13 +72,13 @@ const EmployeeSummaryReport = () => {
         label: "Male",
         data: departmentSummary.map((d) => d.male),
         backgroundColor: "#4ade80",
-        borderRadius: 6,
+        borderRadius: 2,
       },
       {
         label: "Female",
         data: departmentSummary.map((d) => d.female),
         backgroundColor: "#86efac",
-        borderRadius: 6,
+        borderRadius: 2,
       },
     ],
   };
@@ -106,7 +109,7 @@ const EmployeeSummaryReport = () => {
       subtitle: `${((activeEmployees / employees.length) * 100).toFixed(
         0
       )}% of total`,
-      icon: <Briefcase className="w-7 h-7 text-green-600" />,
+      icon: <BsPerson className="w-7 h-7 text-green-600" />,
       iconBg: "bg-green-50",
       iconColor: "text-green-600",
     },
@@ -114,17 +117,17 @@ const EmployeeSummaryReport = () => {
       title: "New Hires",
       value: newHires,
       subtitle: "Currently away",
-      icon: <Calendar className="w-7 h-7 text-orange-600" />,
-      iconBg: "bg-orange-50",
-      iconColor: "text-orange-600",
+      icon: <BsPersonPlus className="w-7 h-7 text-purple-600" />,
+      iconBg: "bg-purple-50",
+      iconColor: "text-purple-600",
     },
     {
       title: "Departments",
       value: departmentCount,
       subtitle: "Last 22 days",
-      icon: <TrendingUp className="w-7 h-7 text-cyan-600" />,
-      iconBg: "bg-cyan-50",
-      iconColor: "text-cyan-600",
+      icon: <LuBuilding2 className="w-7 h-7 text-orange-600" />,
+      iconBg: "bg-orange-50",
+      iconColor: "text-orange-600",
     },
   ];
 

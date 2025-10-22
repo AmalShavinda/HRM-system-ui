@@ -171,9 +171,22 @@ const EmployeeList = ({
       </div>
 
       {/* Footer */}
-      <div className="px-6 py-3 text-sm text-gray-500 bg-gray-50 border-t border-gray-100">
-        Showing {employees.length}{" "}
-        {employees.length === 1 ? "result" : "results"}
+      <div className="flex items-center justify-between px-6 py-3 bg-gray-50 border-t border-gray-100 text-sm text-gray-600">
+        {/* Left side — text */}
+        <span>Showing 1 to 5 of 5 results</span>
+
+        {/* Right side — pagination UI */}
+        <div className="flex items-center gap-2">
+          <button className="px-4 py-1.5 rounded-md border border-gray-200 text-gray-400 bg-white cursor-not-allowed text-sm font-medium">
+            Previous
+          </button>
+          <span className="px-4 py-1.5 rounded-md bg-green-600 text-white font-semibold text-sm">
+            1
+          </span>
+          <button className="px-4 py-1.5 rounded-md border border-gray-200 text-gray-700 bg-white hover:bg-gray-100 text-sm font-medium">
+            Next
+          </button>
+        </div>
       </div>
     </div>
   );
