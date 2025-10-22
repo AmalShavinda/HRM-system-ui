@@ -1,22 +1,25 @@
 import React from "react";
 import {
   Chart as ChartJS,
-  BarElement,
   CategoryScale,
   LinearScale,
+  PointElement,
+  LineElement,
   Tooltip,
-  Legend,
+  Filler,
   Title,
 } from "chart.js";
-import { Bar } from "react-chartjs-2";
+import { Line } from "react-chartjs-2";
 import { AttendanceData } from "../../hooks/useAttendance";
+import { ChevronDown } from "lucide-react";
 
 ChartJS.register(
   CategoryScale,
   LinearScale,
-  BarElement,
+  PointElement,
+  LineElement,
   Tooltip,
-  Legend,
+  Filler,
   Title
 );
 
@@ -25,38 +28,44 @@ interface AttendanceChartProps {
 }
 
 const AttendanceChart: React.FC<AttendanceChartProps> = ({ data }) => {
-  const displayData = data.slice(-14); // Show last 14 days
+  const displayData = data.slice(-7); // Last 7 days
+
+  // Convert "present" counts (8–10) to % (e.g., 80–100%)
+  const totalEmployees = 10;
+  const attendancePercentages = displayData.map(
+    (d) => (d.present / totalEmployees) * 100
+  );
 
   const labels = displayData.map((d) =>
-    new Date(d.date).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-    })
+    new Date(d.date).toLocaleDateString("en-US", { weekday: "short" })
   );
+
+  // Average attendance
+  const avgAttendance =
+    attendancePercentages.reduce((a, b) => a + b, 0) /
+    attendancePercentages.length;
 
   const chartData = {
     labels,
     datasets: [
       {
-        label: "Present",
-        data: displayData.map((d) => d.present),
-        backgroundColor: "#22c55e", // Tailwind green-500
-        borderRadius: 6,
-        barPercentage: 0.7,
-      },
-      {
-        label: "On Leave",
-        data: displayData.map((d) => d.onLeave),
-        backgroundColor: "#f97316", // Tailwind orange-500
-        borderRadius: 6,
-        barPercentage: 0.7,
-      },
-      {
-        label: "Absent",
-        data: displayData.map((d) => d.absent),
-        backgroundColor: "#ef4444", // Tailwind red-500
-        borderRadius: 6,
-        barPercentage: 0.7,
+        label: "Attendance",
+        data: attendancePercentages,
+        fill: true,
+        tension: 0.4,
+        borderColor: "#3B82F6", // Tailwind blue-500
+        pointBackgroundColor: "#3B82F6",
+        pointBorderColor: "#fff",
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        borderWidth: 2,
+        backgroundColor: (context: any) => {
+          const ctx = context.chart.ctx;
+          const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+          gradient.addColorStop(0, "rgba(59, 130, 246, 0.3)");
+          gradient.addColorStop(1, "rgba(59, 130, 246, 0)");
+          return gradient;
+        },
       },
     ],
   };
@@ -64,56 +73,38 @@ const AttendanceChart: React.FC<AttendanceChartProps> = ({ data }) => {
   const options = {
     responsive: true,
     maintainAspectRatio: false,
-    interaction: {
-      mode: "index" as const,
-      intersect: false,
-    },
     plugins: {
-      title: {
-        display: true,
-        text: "Employee Attendance Trend (Last 14 Days)",
-        color: "#111827",
-        font: { size: 16, weight: 600 },
-        padding: { bottom: 20 },
-      },
-      legend: {
-        position: "top" as const,
-        labels: {
-          color: "#374151",
-          usePointStyle: true,
-          pointStyle: "circle",
-          font: { size: 12 },
-        },
-      },
+      legend: { display: false },
       tooltip: {
-        backgroundColor: "#111827",
-        titleColor: "#fff",
-        bodyColor: "#fff",
-        cornerRadius: 8,
+        backgroundColor: "#ffffff",
+        titleColor: "#111827",
+        bodyColor: "#111827",
+        borderColor: "#E5E7EB",
+        borderWidth: 1,
         padding: 10,
-        displayColors: true,
+        displayColors: false,
+        callbacks: {
+          label: (context: any) => `Attendance: ${context.parsed.y.toFixed(0)}%`,
+        },
       },
     },
     scales: {
       x: {
-        stacked: true,
-        grid: {
-          display: false,
-        },
+        grid: { display: false },
         ticks: {
           color: "#6b7280",
-          font: { size: 11 },
+          font: { size: 12 },
         },
       },
       y: {
-        stacked: true,
-        grid: {
-          color: "#e5e7eb",
-        },
+        min: 80,
+        max: 100,
+        grid: { color: "#f3f4f6" },
         ticks: {
           color: "#6b7280",
-          stepSize: 2,
-          font: { size: 11 },
+          font: { size: 12 },
+          stepSize: 5,
+          callback: (value: any) => `${value}%`,
         },
       },
     },
@@ -121,17 +112,27 @@ const AttendanceChart: React.FC<AttendanceChartProps> = ({ data }) => {
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold text-gray-900">
-          Employee Attendance Trend
-        </h2>
-        <p className="text-sm text-gray-600 mt-1">
-          Last 14 days attendance overview
-        </p>
+      <div className="mb-6 flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-gray-900">Attendance Trend</h2>
+        <div className="relative">
+          <select className="appearance-none bg-white border border-gray-200 rounded-lg py-1.5 pl-3 pr-8 text-sm text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer">
+            <option>This Week</option>
+          </select>
+          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
+        </div>
       </div>
 
-      <div className="h-80">
-        <Bar data={chartData} options={options} />
+      <div className="h-64">
+        <Line data={chartData} options={options} />
+      </div>
+
+      <div className="mt-4 text-sm text-gray-600 flex justify-end">
+        <span>
+          Avg Attendance:{" "}
+          <span className="font-semibold text-green-600">
+            {avgAttendance.toFixed(0)}%
+          </span>
+        </span>
       </div>
     </div>
   );

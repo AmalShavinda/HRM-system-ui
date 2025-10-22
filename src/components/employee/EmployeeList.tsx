@@ -1,4 +1,4 @@
-import { Mail, Phone, Briefcase } from "lucide-react";
+import { Eye, Edit2, Trash2 } from "lucide-react";
 import { Employee } from "../../types";
 import { useNavigate } from "react-router-dom";
 
@@ -14,92 +14,166 @@ const EmployeeList = ({
   onSelectEmployee,
 }: EmployeeListProps) => {
   const navigate = useNavigate();
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Active":
-        return "bg-green-100 text-green-800";
+        return "bg-green-100 text-green-700";
       case "On Leave":
-        return "bg-orange-100 text-orange-800";
+        return "bg-yellow-100 text-yellow-700";
       case "Inactive":
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 text-gray-700";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 text-gray-700";
     }
   };
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-      <div className="p-6 border-b border-gray-100">
+      {/* Table Header */}
+      <div className="px-6 py-4 border-b border-gray-100">
         <h2 className="text-lg font-semibold text-gray-900">Employee List</h2>
       </div>
 
-      <div className="divide-y divide-gray-100 max-h-[800px] overflow-y-auto">
-        {employees.length === 0 ? (
-          <div className="p-12 text-center">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Briefcase className="w-8 h-8 text-gray-400" />
-            </div>
-            <p className="text-gray-500">No employees found</p>
-          </div>
-        ) : (
-          employees.map((employee) => (
-            <div
-              key={employee.id}
-              onClick={() => navigate(`/employees/${employee.id}`)}
-              className={`p-6 cursor-pointer transition-all hover:bg-gray-50 ${
-                selectedEmployee?.id === employee.id
-                  ? "bg-blue-50 border-l-4 border-blue-500"
-                  : ""
-              }`}
-            >
-              <div className="flex items-start gap-4">
-                <img
-                  src={employee.avatar}
-                  alt={employee.name}
-                  className="w-14 h-14 rounded-full object-cover border-2 border-white shadow-sm"
-                />
+      {/* Table */}
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-100">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Employee
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Department
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Role
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Email
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Status
+              </th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Actions
+              </th>
+            </tr>
+          </thead>
 
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <div>
-                      <h3 className="font-semibold text-gray-900 text-base">
-                        {employee.name}
-                      </h3>
-                      <p className="text-sm text-gray-600">{employee.role}</p>
+          <tbody className="divide-y divide-gray-100">
+            {employees.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={6}
+                  className="px-6 py-12 text-center text-gray-500 text-sm"
+                >
+                  No employees found
+                </td>
+              </tr>
+            ) : (
+              employees.map((employee) => (
+                <tr
+                  key={employee.id}
+                  className={`hover:bg-gray-50 transition-all ${
+                    selectedEmployee?.id === employee.id
+                      ? "bg-blue-50"
+                      : "bg-white"
+                  }`}
+                >
+                  {/* Employee Info */}
+                  <td
+                    className="px-6 py-4 whitespace-nowrap cursor-pointer"
+                    onClick={() => onSelectEmployee(employee)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={employee.avatar}
+                        alt={employee.name}
+                        className="w-10 h-10 rounded-full object-cover"
+                      />
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {employee.name}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          ID: {employee.id}
+                        </div>
+                      </div>
                     </div>
+                  </td>
+
+                  {/* Department */}
+                  <td className="px-6 py-4 text-sm text-gray-700 whitespace-nowrap">
+                    {employee.department}
+                  </td>
+
+                  {/* Role */}
+                  <td className="px-6 py-4 text-sm text-gray-700 whitespace-nowrap">
+                    {employee.role}
+                  </td>
+
+                  {/* Email */}
+                  <td className="px-6 py-4 text-sm text-gray-700 whitespace-nowrap truncate max-w-[200px]">
+                    {employee.email}
+                  </td>
+
+                  {/* Status */}
+                  <td className="px-6 py-4 whitespace-nowrap">
                     <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                      className={`px-3 py-1 text-xs font-medium rounded-full ${getStatusColor(
                         employee.status
                       )}`}
                     >
                       {employee.status}
                     </span>
-                  </div>
+                  </td>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <Mail className="w-4 h-4" />
-                      <span className="truncate">{employee.email}</span>
+                  {/* Actions */}
+                  <td className="px-6 py-4 text-center whitespace-nowrap">
+                    <div className="flex items-center justify-center gap-3">
+                      <button
+                        onClick={() =>
+                          navigate(`/employees/${employee.id}`, {
+                            state: { mode: "view" },
+                          })
+                        }
+                        className="text-blue-500 hover:text-blue-700 transition"
+                        title="View"
+                      >
+                        <Eye className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={() =>
+                          navigate(`/employees/${employee.id}/edit`)
+                        }
+                        className="text-green-500 hover:text-green-700 transition"
+                        title="Edit"
+                      >
+                        <Edit2 className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={() =>
+                          console.log("Delete employee:", employee.id)
+                        }
+                        className="text-red-500 hover:text-red-700 transition"
+                        title="Delete"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
                     </div>
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <Phone className="w-4 h-4" />
-                      <span>{employee.phone}</span>
-                    </div>
-                  </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
 
-                  <div className="mt-2 flex items-center gap-2">
-                    <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
-                      {employee.department}
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      ID: {employee.id}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))
-        )}
+      {/* Footer */}
+      <div className="px-6 py-3 text-sm text-gray-500 bg-gray-50 border-t border-gray-100">
+        Showing {employees.length}{" "}
+        {employees.length === 1 ? "result" : "results"}
       </div>
     </div>
   );

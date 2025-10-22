@@ -1,5 +1,5 @@
-import { LeaveRequest } from '../../hooks/useLeaves';
 import { Calendar, Clock, FileText, CheckCircle, XCircle, MessageSquare, User } from 'lucide-react';
+import { LeaveRequest } from '../../types';
 
 interface LeaveApprovalPanelProps {
   leave: LeaveRequest | null;
