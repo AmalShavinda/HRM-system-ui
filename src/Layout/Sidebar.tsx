@@ -7,12 +7,14 @@ interface SidebarProps {
   isSidebarOpen: boolean;
   setActiveTab: React.Dispatch<React.SetStateAction<string>>;
   closeSidebar: () => void;
+  toggleSidebar: () => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
   isSidebarOpen,
   setActiveTab,
   closeSidebar,
+  toggleSidebar,
 }) => {
   const { navigation, handleMenuClick, location } = useSidebar();
   const employee = dummyEmployees[3];
@@ -20,7 +22,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   return (
     <div>
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50 px-4 py-3">
+      <div className="lg:hidden fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-40 px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-lg flex items-center justify-center">
@@ -32,7 +34,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             </div>
           </div>
           <button
-            onClick={closeSidebar}
+            onClick={toggleSidebar}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
             {isSidebarOpen ? (

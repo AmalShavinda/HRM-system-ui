@@ -7,6 +7,10 @@ const Layout = () => {
   const [__activeTab, setActiveTab] = useState("dashboard");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
   const closeSidebar = () => {
     setIsSidebarOpen(false);
   };
@@ -17,6 +21,7 @@ const Layout = () => {
         isSidebarOpen={isSidebarOpen}
         setActiveTab={setActiveTab}
         closeSidebar={closeSidebar}
+        toggleSidebar={toggleSidebar}
       />
 
       {isSidebarOpen && (
