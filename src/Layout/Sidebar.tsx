@@ -29,8 +29,8 @@ const Sidebar: React.FC<SidebarProps> = ({
               <Zap className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-gray-900">Spark HRM</h1>
-              <p className="text-xs text-gray-600">Retail Management</p>
+              <h1 className="text-lg font-bold text-gray-900">ABC HRM</h1>
+              <p className="text-xs text-gray-600">Employee Management</p>
             </div>
           </div>
           <button
@@ -122,7 +122,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             </div>
 
             {/* Optional action button */}
-            <button className="ml-auto bg-cyan-200 hover:bg-cyan-300 text-cyan-800 font-medium text-sm px-3 py-1 rounded-lg transition-all">
+            <button className="ml-auto bg-cyan-100 hover:bg-cyan-200 text-cyan-900 font-medium text-sm px-3 py-1 rounded-lg transition-all">
               Profile
             </button>
           </div>
